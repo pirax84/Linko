@@ -122,6 +122,15 @@ public class MainActivity extends Activity {
     /** Lit une page web (sans les blocages CORS du navigateur) et renvoie son code a la page Linko. */
     private class Bridge {
         @JavascriptInterface
+        public void openExternal(final String url) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) { }
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void fetchPage(final String id, final String url) {
             new Thread(new Runnable() {
                 public void run() {
@@ -160,6 +169,10 @@ public class MainActivity extends Activity {
     }
 
     private String urlFor(Intent i) {
+        if (i != null && Intent.ACTION_VIEW.equals(i.getAction()) && i.getData() != null && "app.linko".equals(i.getData().getScheme())) {
+            String frag = i.getData().getEncodedFragment();
+            return HOME + (frag != null ? "#" + frag : "");
+        }
         if (i != null && Intent.ACTION_SEND.equals(i.getAction())) {
             String text = i.getStringExtra(Intent.EXTRA_TEXT);
             String title = i.getStringExtra(Intent.EXTRA_SUBJECT);

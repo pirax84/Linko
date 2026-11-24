@@ -325,7 +325,7 @@ const APP_URL="https://claude.ai/artifact/QjshwrCdTxRW4niQ2wQzNg";
 /* ---------- textes (français / anglais) ---------- */
 const T={
 skip:["Aller au contenu","Skip to content"],close:["Fermer","Close"],back:["Retour","Back"],cancel:["Annuler","Cancel"],undo:["Annuler","Undo"],view:["Voir","View"],ok:["OK","OK"],add:["Ajouter","Add"],save:["Enregistrer","Save"],send:["Envoyer","Send"],
-login_title:["Vos liens, rangés et partagés.","Your links, sorted and shared."],login_google:["Continuer avec Google","Continue with Google"],login_phone:["Continuer avec mon numéro","Continue with my number"],login_fb:["Continuer avec Facebook","Continue with Facebook"],login_mail:["Utiliser une adresse e-mail","Use an email address"],login_demo:["Entrer en mode démo","Enter demo mode"],login_note:["Google et Facebook ouvrent leur vraie page de connexion. Pour connecter Linko lui-même, il faudra un projet Supabase (Réglages, après le mode démo).","Google and Facebook open their real sign-in page. To connect Linko itself you need a Supabase project (Settings, after demo mode)."],terms_pre:["En continuant, vous acceptez les ","By continuing, you accept the "],terms_link:["conditions d’utilisation","terms of use"],
+login_title:["Vos liens, rangés et partagés.","Your links, sorted and shared."],login_google:["Continuer avec Google","Continue with Google"],login_phone:["Continuer avec mon numéro","Continue with my number"],login_fb:["Continuer avec Facebook","Continue with Facebook"],login_mail:["Utiliser une adresse e-mail","Use an email address"],login_demo:["Entrer en mode démo","Enter demo mode"],login_note:["Ton compte garde tes recettes et catégories sur Android et sur PC. Le mode démo les garde seulement sur cet appareil.","Your account keeps your recipes and categories on Android and PC. Demo mode keeps them on this device only."],terms_pre:["En continuant, vous acceptez les ","By continuing, you accept the "],terms_link:["conditions d’utilisation","terms of use"],
 phone_title:["Votre numéro","Your number"],phone_sub:["Nous vous envoyons un code par SMS.","We will text you a code."],phone_ph:["06 12 34 56 78","06 12 34 56 78"],phone_send:["Recevoir le code","Get the code"],code_title:["Entrez le code reçu","Enter the code"],code_sub:["Version de test : tapez 6 chiffres au hasard.","Test version: type any 6 digits."],code_ok:["Valider","Confirm"],code_bad:["Entrez les 6 chiffres.","Enter all 6 digits."],
 tab_links:["Liens","Links"],tab_friends:["Amis","Friends"],tab_req:["Demandes","Requests"],tab_act:["Activité","Activity"],tab_set:["Réglages","Settings"],nav_main:["Navigation principale","Main navigation"],
 search:["Chercher un lien","Search a link"],add_link:["Ajouter un lien","Add a link"],new1:["1 nouveau lien","1 new link"],newn:["{n} nouveaux liens","{n} new links"],from_share:["Reçus du partage","Received from sharing"],sort_btn:["Ranger","Sort"],my_cats:["Mes catégories","My categories"],organize:["Organiser","Organize"],n_link1:["1 lien","1 link"],n_links:["{n} liens","{n} links"],no_results:["Aucun lien trouvé.","No link found."],empty_cat:["Aucun lien ici pour le moment.","No links here yet."],all:["Tout","All"],uncat:["À ranger","To sort"],
@@ -580,14 +580,14 @@ function vSet(){
  <p style="margin-top:.8rem"><button class="lnk" data-a="logout">${t("s_logout")}</button></p>`}
 function cguHTML(){return `<div class="cgu"><p class="note">${t("cgu_draft")}</p><p class="mut">${t("cgu_updated")}</p>${CGU[L].map(([h,ps])=>`<h3>${esc(h)}</h3>${ps.map(p=>`<p>${esc(p)}</p>`).join("")}`).join("")}</div>`}
 function vCgu(){return `<div class="flip top2"><button class="bt" data-a="back" aria-label="${t("back")}">${ic("ic-back")}</button><h1>${t("cgu_title")}</h1><span class="bt" style="visibility:hidden"></span></div>${cguHTML()}`}
-const PROV=[["google","login_google","https://accounts.google.com/signin"],["facebook","login_fb","https://www.facebook.com/login/"]];
+const sbReady=()=>{const C=window.LINKO_CONFIG||{};return !!((S.set.sb||C.supabaseUrl||"").trim()&&(S.set.sbk||C.supabaseKey||"").trim())};
 const provUrl=p=>{let sb=(S.set.sb||"").trim().replace(/\/$/,"");return sb?`${sb}/auth/v1/authorize?provider=${p[0]}&redirect_to=${encodeURIComponent(location.href.split("#")[0])}`:p[2]};
 function vLogin(){
  const lg=`<div class="seg" style="width:max-content;margin:0 0 0 auto" role="group" aria-label="${t("s_lang")}"><button data-a="lang" data-id="fr" aria-pressed="${S.lang==="fr"}" lang="fr">FR</button><button data-a="lang" data-id="en" aria-pressed="${S.lang==="en"}" lang="en">EN</button></div>`;
  if(S.step==="phone")return `<main class="login">${lg}<button class="bt" data-a="lstep" data-id="main" aria-label="${t("back")}">${ic("ic-back")}</button><h1 class="big">${t("phone_title")}</h1><p class="mut">${t("phone_sub")}</p><label class="sr" for="ph">${t("phone_title")}</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="${t("phone_ph")}"><button class="btn" data-a="sendcode">${t("phone_send")}</button><p class="mut" id="lerr" role="alert"></p></main>`;
  if(S.step==="code")return `<main class="login">${lg}<button class="bt" data-a="lstep" data-id="phone" aria-label="${t("back")}">${ic("ic-back")}</button><h1 class="big">${t("code_title")}</h1><p class="mut">${t("code_sub")}</p><div class="codes" role="group" aria-label="${t("code_title")}">${[0,1,2,3,4,5].map(i=>`<input class="cd" inputmode="numeric" maxlength="1" aria-label="${i+1}/6" autocomplete="${i?"off":"one-time-code"}">`).join("")}</div><button class="btn" data-a="checkcode">${t("code_ok")}</button><p class="mut" id="lerr" role="alert"></p></main>`;
  return `<main class="login">${lg}<div class="brand">${ic("logo","m")}Linko</div><p class="mut" style="margin-bottom:.6rem">${t("login_title")}</p>
- ${PROV.map(p=>`<a class="btn o" href="${esc(provUrl(p))}" target="_blank" rel="noopener noreferrer">${t(p[1])}</a>`).join("")}
+ ${sbReady()?`<label class="sr" for="lem">${t("sy_email")}</label><input id="lem" type="email" autocomplete="email" inputmode="email" placeholder="${esc(t("sy_email"))}"><label class="sr" for="lpw">${t("sy_pw")}</label><input id="lpw" type="password" autocomplete="current-password" placeholder="${esc(t("sy_pw"))}"><p class="mut" id="lerr" role="alert" style="font-size:.85rem;margin:.1rem 0"></p><button class="btn" data-a="lmail">${t("lg_mail")}</button><button class="btn o" data-a="lgoogle">${t("login_google")}</button>`:`<p class="mut" style="font-size:.85rem">${t("lg_nosb")}</p>`}
  <button class="btn o" data-a="lstep" data-id="phone">${t("login_phone")}</button>
  <button class="btn" data-a="login">${t("login_demo")}</button>
  <p class="mut" style="font-size:.8rem">${t("login_note")}</p>
@@ -935,7 +935,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("keydown",e=>{if(e.key!=="Enter"||e.isComposing)return;
  if(e.target.id==="madd")act2("madd");if(e.target.id==="cin")act2("csend");if(e.target.id==="cmin"){const b=document.querySelector("[data-a=cmsend]");b&&act2("cmsend",b.dataset.id,b)}if(e.target.id==="fau")act2("fago");if(e.target.id==="tmin"||e.target.id==="tnm")act2("tmake")});
 
-render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
+
 /* ---------- favoris par thèmes + recettes ---------- */
 
 const UNI="pots?|g|kg|mg|cl|ml|l|dl|cs|cc|c\\.?\\s?à\\s?(?:s|c|soupe|café)\\.?|cuill?[èe]res?(?:\\s+à\\s+(?:soupe|café))?|tasses?|verres?|pincées?|gousses?|tranches?|sachets?|boîtes?|brins?|feuilles?|tbsp|tsp|cups?|oz|lb";
@@ -1210,6 +1210,31 @@ act2=function(a,id,el){
  }
  return _a4(a,id,el)};
 
+
+/* --- connexion par compte (e-mail ou Google, via Supabase) --- */
+Object.assign(T,{lg_mail:["Se connecter / créer mon compte","Sign in / create my account"],lg_nosb:["Pour te connecter avec un compte, relie d’abord Supabase (Réglages → Synchronisation). En attendant, utilise le mode démo.","To sign in with an account, first connect Supabase (Settings → Sync). Meanwhile, use demo mode."],lg_need:["Entre ton e-mail et un mot de passe (6 caractères minimum).","Enter your email and a password (6 characters minimum)."],lg_google_err:["Connexion Google impossible : {e}","Google sign-in failed: {e}"],lg_ok:["Connecté","Signed in"]});
+const lgEnter=async(email,name)=>{S.auth=true;S.user={name:name||email.split("@")[0],email};const a=syA();a.email=email;a.h=null;a.at=null;save0();render();await syncNow(true);render()};
+async function lgMail(){const em=(($("#lem")||{}).value||"").trim(),pw=($("#lpw")||{}).value||"",er=$("#lerr"),say=m=>{if(er)er.textContent=m};
+ if(!em||pw.length<6){say(t("lg_need"));return}
+ try{let j;try{j=await sbFetch("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:em,password:pw})},false)}
+  catch(e){if(e.status===400||e.status===401){const x=await sbFetch("/auth/v1/signup",{method:"POST",body:JSON.stringify({email:em,password:pw})},false);if(!x.access_token){say(t("sy_confirm"));return}j=x}else throw e}
+  syStore(j);await lgEnter(em)}
+ catch(e){say(/already|registered|credential|invalid/i.test(e.message)?t("sy_wrong"):t("sy_err",{e:e.message}))}}
+function lgGoogle(){const c=sbc(),native=!!window.LinkoNative&&window.LinkoNative.openExternal,back=native?"app.linko://login-callback":location.origin+location.pathname,
+ u=`${c.u}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(back)}`;
+ if(native)window.LinkoNative.openExternal(u);else location.href=u}
+async function authFromHash(){const h=location.hash||"";if(!/access_token=|error_description=/.test(h))return;const p=new URLSearchParams(h.slice(1));
+ try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+ if(p.get("error_description")){toast(t("lg_google_err",{e:p.get("error_description")}));return}
+ try{syStore({access_token:p.get("access_token"),refresh_token:p.get("refresh_token"),expires_in:+p.get("expires_in")||3600});
+  const u=await sbFetch("/auth/v1/user");const m=u.user_metadata||{};syStore({access_token:p.get("access_token"),refresh_token:p.get("refresh_token"),expires_in:+p.get("expires_in")||3600,user:u});
+  await lgEnter(u.email||"",m.full_name||m.name)}
+ catch(e){toast(t("lg_google_err",{e:e.message}))}}
+addEventListener("hashchange",authFromHash);setTimeout(authFromHash,0);
+const _a6=act2;
+act2=function(a,id,el){
+ switch(a){case"lmail":lgMail();return true;case"lgoogle":lgGoogle();return true}
+ return _a6(a,id,el)};
 /* --- bulle vocale --- */
 Object.assign(T,{vb_title:["Messagerie vocale","Voice messaging"],vb_open:["Ouvrir la messagerie vocale","Open voice messaging"],vb_close:["Fermer la messagerie vocale","Close voice messaging"],
 vb_ready:["Prêt","Ready"],vb_listen:["Écoute…","Listening…"],vb_pause:["En pause","Paused"],vb_mute:["Micro coupé","Mic off"],vb_send:["Envoi…","Sending…"],vb_play:["Lecture…","Playing…"],
@@ -1347,6 +1372,7 @@ act2=function(a,id,el){
  }
  return _a5(a,id,el)};
 vbPaint();
+render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
 
 window.__linko={vb:()=>VB,S:()=>S,syncNow,qrSvg,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
 })();

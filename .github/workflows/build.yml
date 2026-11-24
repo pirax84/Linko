@@ -1,0 +1,67 @@
+name: Linko - APK Android + site PC
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: linko-build
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Fabriquer l'APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assembler la page (web/index.html)
+        run: python3 src/build.py
+      - name: Copier la page dans l'appli Android
+        run: |
+          cp web/index.html web/manifest.webmanifest android/app/src/main/assets/
+          mkdir -p android/app/src/main/assets/icons && cp web/icons/* android/app/src/main/assets/icons/
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.3
+      - name: Fabriquer Linko.apk
+        working-directory: android
+        run: gradle --no-daemon assembleRelease
+      - name: Renommer l'APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk Linko.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Linko-apk
+          path: Linko.apk
+      - name: Publier l'APK dans « Releases » (lien de telechargement fixe)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Linko.apk --title "Linko (derniere version)" --notes "Telecharge Linko.apk sur ton telephone Android puis ouvre-le pour l'installer."
+
+  pages:
+    name: Mettre en ligne la version PC
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 src/build.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deploy
+        uses: actions/deploy-pages@v4

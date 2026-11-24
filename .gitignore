@@ -1,0 +1,7 @@
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/*
+!android/app/src/main/assets/.gitkeep
+.DS_Store

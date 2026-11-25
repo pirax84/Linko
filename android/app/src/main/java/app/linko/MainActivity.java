@@ -53,6 +53,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle b) {
+        self = this;
         super.onCreate(b);
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.parseColor("#EEF2F6"));
@@ -196,6 +197,28 @@ public class MainActivity extends Activity {
                 o.close();
                 return name;
             } catch (Exception e) { return ""; }
+        }
+
+        @JavascriptInterface
+        public void mediaState(final String title, final String artist, final String thumb, final boolean playing) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED)
+                            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 52);
+                        Intent i = new Intent(MainActivity.this, PlayerService.class).setAction("app.linko.UPDATE")
+                                .putExtra("t", title).putExtra("a", artist).putExtra("i", thumb).putExtra("p", playing);
+                        if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
+                    } catch (Exception e) { }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void mediaStop() {
+            runOnUiThread(new Runnable() {
+                public void run() { try { stopService(new Intent(MainActivity.this, PlayerService.class)); } catch (Exception e) { } }
+            });
         }
 
         @JavascriptInterface
@@ -369,6 +392,17 @@ public class MainActivity extends Activity {
         wv.saveState(o);
     }
 
+    static MainActivity self;
+
+    /** Envoie une commande (play, pause, next, prev, stop) à la page web. */
+    static void sendCmd(final String c) {
+        final MainActivity a = self;
+        if (a == null || a.wv == null) return;
+        a.runOnUiThread(new Runnable() { public void run() {
+            a.wv.evaluateJavascript("window.__plCmd&&window.__plCmd('" + c + "')", null);
+        } });
+    }
+
     @Override
     public void onBackPressed() {
         if (customView != null) { wv.getWebChromeClient().onHideCustomView(); return; }
@@ -376,7 +410,14 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onPause() { super.onPause(); wv.onPause(); }
+    protected void onPause() { super.onPause(); if (!PlayerService.active) wv.onPause(); }
+
+    @Override
+    protected void onDestroy() {
+        try { stopService(new Intent(this, PlayerService.class)); } catch (Exception e) { }
+        if (self == this) self = null;
+        super.onDestroy();
+    }
 
     @Override
     protected void onResume() { super.onResume(); wv.onResume(); }

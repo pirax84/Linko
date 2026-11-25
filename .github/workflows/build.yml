@@ -65,4 +65,11 @@ jobs:
         with:
           path: web
       - id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Attendre puis reessayer (GitHub met parfois du temps a voir le fichier)
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 60
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4

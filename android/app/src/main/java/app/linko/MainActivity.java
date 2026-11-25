@@ -122,6 +122,40 @@ public class MainActivity extends Activity {
     /** Lit une page web (sans les blocages CORS du navigateur) et renvoie son code a la page Linko. */
     private class Bridge {
         @JavascriptInterface
+        public void fetchPost(final String id, final String url, final String body, final String ua) {
+            new Thread(new Runnable() {
+                public void run() {
+                    String out = "";
+                    try {
+                        if (url.startsWith("https://")) {
+                            HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+                            c.setRequestMethod("POST");
+                            c.setDoOutput(true);
+                            c.setConnectTimeout(8000);
+                            c.setReadTimeout(12000);
+                            c.setRequestProperty("Content-Type", "application/json");
+                            c.setRequestProperty("User-Agent", (ua != null && ua.length() > 0) ? ua : "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36");
+                            c.setRequestProperty("Accept-Language", "fr,en;q=0.8");
+                            byte[] data = body.getBytes("UTF-8");
+                            c.getOutputStream().write(data);
+                            int code = c.getResponseCode();
+                            InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+                            if (in != null) {
+                                ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                                byte[] buf = new byte[16384];
+                                int n, total = 0;
+                                while ((n = in.read(buf)) > 0 && total < 4000000) { bo.write(buf, 0, n); total += n; }
+                                out = bo.toString("UTF-8");
+                            }
+                        }
+                    } catch (Exception ignored) { }
+                    final String js = "window.__nativeFetched(" + JSONObject.quote(id) + "," + JSONObject.quote(out) + ")";
+                    runOnUiThread(new Runnable() { public void run() { wv.evaluateJavascript(js, null); } });
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
         public void openExternal(final String url) {
             runOnUiThread(new Runnable() {
                 public void run() {

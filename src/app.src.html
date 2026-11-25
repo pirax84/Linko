@@ -1045,7 +1045,7 @@ function vRec(){const l=recOf();if(!l){S.sub=null;return vHome()}const r=l.rec,e
  const ing=r.ings.length?r.ings.map((i,k)=>`<div class="row ing"><button class="ckb" role="checkbox" aria-checked="${have.includes(k)}" data-a="rhave" data-id="${k}" aria-label="${esc(t("rc_have")+": "+i.n)}"><span class="ckx">${ic("ic-check")}</span></button><div class="g ${have.includes(k)?"dn":""}"><b>${esc(i.n)}</b></div>${qfmt(i)}</div>`).join(""):`<p class="empty">${t("rc_noing")}</p>`;
  const stp=r.steps.map((s,k)=>`<div class="stp"><b>${k+1}</b><p>${esc(s)}</p></div>`).join("");
  return `<div class="rhd"><button class="rb2" data-a="back" aria-label="${esc(t("rc_back"))}">${ic("ic-back")}</button><h1>${t("rc_badge")}</h1><button class="rb2" data-a="lmenu" data-id="${l.id}" aria-label="${esc(t("actions_for",{t:l.title}))}">${ic("ic-more")}</button></div>
- <div class="recw"><div class="rl">${vid}<h2 class="rt">${esc(r.title)}</h2>${meta}${cookRow}<div class="cls" role="group" aria-label="${t("rc_cls")}">${GG.map(g=>clsBtn(g,(l.rcat||{})[g],l.id)).join("")}</div><p class="rban">${ic("ic-wand")}<span>${r.demoA?t("rc_demo_a"):r.demo?t("rc_demo"):r.web?t("rc_banner_a"):t("rc_banner",{s:(r.src||[]).join(", ")||"—"})}</span></p><div class="rfoot"><button class="btn" data-a="rcart" data-id="${l.id}">${ic("ic-cart")}<span class="lb">${t("rc_cart")}</span></button><button class="btn o" data-a="rshare" data-id="${l.id}">${ic("ic-share")}<span class="lb">${t("rc_share")}</span></button><button class="btn o" data-a="redit" data-id="${l.id}" aria-label="${esc(t("rc_edit"))}">${ic("ic-edit")}<span class="lb">${t("rc_edit")}</span></button></div></div>
+ <div class="recw"><div class="rl">${vid}<h2 class="rt">${esc(r.title)}</h2>${meta}${cookRow}<div class="cls" role="group" aria-label="${t("rc_cls")}">${GG.map(g=>clsBtn(g,(l.rcat||{})[g],l.id)).join("")}</div><p class="rban">${ic("ic-wand")}<span>${r.demoA?t("rc_demo_a"):r.demo?t("rc_demo"):r.web?t("rc_banner_a"):t("rc_banner",{s:(r.src||[]).join(", ")||"—"})}</span></p>${r.srcUrl?`<p class="mut" style="font-size:.8rem;margin:.1rem 0 .5rem">${t("px_source")} : <a href="${esc(r.srcUrl)}" target="_blank" rel="noopener noreferrer">${esc(host(r.srcUrl))}</a></p>`:""}<div class="rfoot"><button class="btn" data-a="rcart" data-id="${l.id}">${ic("ic-cart")}<span class="lb">${t("rc_cart")}</span></button><button class="btn o" data-a="rshare" data-id="${l.id}">${ic("ic-share")}<span class="lb">${t("rc_share")}</span></button><button class="btn o" data-a="redit" data-id="${l.id}" aria-label="${esc(t("rc_edit"))}">${ic("ic-edit")}<span class="lb">${t("rc_edit")}</span></button></div></div>
  <div class="rr"><div class="seg rseg" role="group">${[["ing","rc_ing"],["stp","rc_stp"],["note","rc_notes"]].map(x=>`<button aria-pressed="${tab===x[0]}" data-a="rtab" data-id="${x[0]}">${t(x[1])}</button>`).join("")}</div>
  <section class="rp ${tab==="ing"?"on":""}"><h3>${t("rc_ing")}</h3>${ing}</section><section class="rp ${tab==="stp"?"on":""}"><h3>${t("rc_stp")}</h3>${stp}</section><section class="rp ${tab==="note"?"on":""}"><h3>${t("rc_notes")}</h3><textarea id="rnote" rows="4" placeholder="${esc(t("rc_notes_ph"))}" aria-label="${esc(t("rc_notes_ph"))}">${esc(r.note||"")}</textarea></section></div></div>`}
 function favList(){const q=(S.fq||"").trim().toLowerCase(),th=S.fth||"all",sr=S.fsrc||"all";
@@ -1211,6 +1211,145 @@ act2=function(a,id,el){
  return _a4(a,id,el)};
 
 
+/* --- extraction de recette en cascade (légende > commentaires > lien > sous-titres) --- */
+Object.assign(T,{px_title:["Recherche de la recette","Looking for the recipe"],
+px_s1:["Légende de la vidéo","Video caption"],px_s2:["Commentaires (épinglé, auteur)","Comments (pinned, author)"],px_s3:["Lien vers une recette écrite","Link to a written recipe"],px_s4:["Sous-titres de la vidéo","Video subtitles"],px_s5:["Écoute de l’audio","Listening to the audio"],
+px_wait:["en attente","waiting"],px_read:["lecture…","reading…"],px_ok:["recette trouvée","recipe found"],px_none:["pas de recette","no recipe"],px_skip:["pas nécessaire","not needed"],
+px_nolink:["aucun lien","no link"],px_nocom:["aucun commentaire utile","no useful comment"],px_nosub:["pas de sous-titres","no subtitles"],px_subnr:["sous-titres sans recette","subtitles without a recipe"],px_na:["indisponible pour ce site","not available for this site"],px_pc:["indisponible sur PC","not available on PC"],px_audio_na:["pas encore disponible","not available yet"],
+px_fail_t:["Aucune recette trouvée","No recipe found"],
+px_why_private:["Étape bloquante : vidéo privée ou indisponible, Linko ne peut pas la lire.","Blocking step: private or unavailable video, Linko cannot read it."],
+px_why_net:["Étape bloquante : page illisible (pas de réseau ou site protégé).","Blocking step: unreadable page (no network or protected site)."],
+px_why_pc:["Sur PC, Linko ne peut pas lire la vidéo tout seul (protection du navigateur). Colle la légende ou le texte de la recette, ou utilise l’appli Android.","On PC, Linko cannot read the video by itself (browser protection). Paste the caption or the recipe text, or use the Android app."],
+px_why_none:["Étape bloquante : aucun texte de recette dans la légende, les commentaires ou un lien, et pas de sous-titres exploitables. La recette est peut-être seulement dite à l’oral ou écrite dans la vidéo.","Blocking step: no recipe text in the caption, comments or a link, and no usable subtitles. The recipe may only be spoken or shown in the video."],
+px_manual:["Remplir à la main","Fill in by hand"],px_paste:["Coller le texte","Paste the text"],px_ex:["Voir un exemple","See an example"],px_source:["Source","Source"],
+px_src_desc:["légende","caption"],px_src_com:["commentaires","comments"],px_src_link:["lien externe","external link"],px_src_sub:["sous-titres","subtitles"]});
+const hasNative=()=>!!(window.LinkoNative&&window.LinkoNative.fetchPage);
+function nativePost(url,body,ua){return new Promise(res=>{if(!(window.LinkoNative&&window.LinkoNative.fetchPost))return res("");const id=uid();window.__nf[id]=res;setTimeout(()=>{if(window.__nf[id]){delete window.__nf[id];res("")}},16000);try{LinkoNative.fetchPost(id,url,JSON.stringify(body),ua||"")}catch(e){delete window.__nf[id];res("")}})}
+const ytId=u=>{try{const x=new URL(u),h=x.hostname.replace(/^(www|m|music)\./,"");if(h==="youtu.be")return x.pathname.slice(1,12);if(h.endsWith("youtube.com"))return x.searchParams.get("v")||(x.pathname.match(/\/(?:shorts|embed|live)\/([\w-]{11})/)||[])[1]||""}catch(e){}return""};
+const PX_ENT=s=>{const e=document.createElement("textarea");e.innerHTML=s;return e.value},PX_DEC=s=>PX_ENT(PX_ENT(s));
+const YT_UA="com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip",WB_UA="Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
+/* nettoyage du texte d'une légende */
+function pxClean(tx){return String(tx||"").replace(/\r/g,"").split(/\n/).map(x=>x.trim()).filter(x=>x&&!/^(https?:\/\/\S+|www\.\S+)$/i.test(x)&&!/^(#\S+\s*)+$/.test(x)&&!/^\(?\d{1,2}:\d{2}(:\d{2})?\)?\s/.test(x)).join("\n")}
+/* une recette est-elle plausible ? */
+const recipeOK=(r,strict)=>{if(!r)return false;const q=r.ings.filter(i=>i.q).length;if(strict)return (q>=2&&(r.steps.length>=1||r.ings.length>=3))||(r.ings.length>=4&&r.steps.length>=2);return(r.ings.length>=2&&r.steps.length>=1)||r.ings.length>=4||r.steps.length>=4};
+/* liens */
+const PX_SKIP=/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.com|fb\.watch|twitter\.com|x\.com|threads\.net|spotify\.com|apple\.com|deezer\.com|snapchat\.com|pinterest\.[a-z]+|wa\.me|whatsapp\.com|t\.me|discord\.gg|paypal\.[a-z]+|patreon\.com|amazon\.[a-z.]+|amzn\.to|amzn\.eu|google\.[a-z.]+)$/i;
+const PX_HUB=/(linktr\.ee|beacons\.ai|bio\.link|lnk\.bio|taplink|stan\.store|linkin\.bio|campsite\.bio|solo\.to|carrd\.co|msha\.ke|hoo\.be|allmylinks)/i;
+const urlsIn=tx=>[...new Set((String(tx||"").replace(/\\u002F/gi,"/").match(/https?:\/\/[^\s<>"'\\)\]]+/g)||[]).map(u=>u.replace(/[.,;:!?]+$/,"")))].filter(u=>{try{return !PX_SKIP.test(new URL(u).hostname)}catch(e){return false}});
+async function pxLink(u,title,depth){
+ if(PX_HUB.test(u)&&(depth||0)<1){const h=await nativeFetch(u);if(!h)return null;let c=[];
+  try{const doc=new DOMParser().parseFromString(h,"text/html");c=[...doc.querySelectorAll("a[href]")].map(a=>({h:(()=>{try{return new URL(a.getAttribute("href"),u).href}catch(e){return""}})(),t:(a.textContent||"").trim()}))}catch(e){}
+  urlsIn(h).forEach(x=>c.push({h:x,t:""}));
+  c=c.filter(a=>/^https?:/.test(a.h)&&!PX_SKIP.test(new URL(a.h).hostname)&&!PX_HUB.test(new URL(a.h).hostname));
+  const seen=new Set();c=c.filter(a=>!seen.has(a.h)&&seen.add(a.h));
+  const pri=a=>/recette|recipe|cuisine|blog|ingr/i.test(a.t+" "+a.h)?0:1;c.sort((a,b)=>pri(a)-pri(b));
+  for(const a of c.slice(0,4)){const r=await pxLink(a.h,title,1);if(r)return r}return null}
+ try{const r=await buildArticle({url:u,title:title},"");if(r&&recipeOK(r)){r.srcUrl=u;return r}}catch(e){}return null}
+/* YouTube */
+async function ytInfo(id){
+ const raw=await nativePost("https://www.youtube.com/youtubei/v1/player?prettyPrint=false",{context:{client:{clientName:"ANDROID",clientVersion:"20.10.38",androidSdkVersion:34,hl:L==="en"?"en":"fr"}},videoId:id},YT_UA);
+ let j;try{j=JSON.parse(raw)}catch(e){return{error:"net"}}
+ const ps=j.playabilityStatus||{};if(!j.videoDetails)return{error:/LOGIN|UNPLAYABLE|PRIVATE|NOT_FOUND|ERROR/i.test(ps.status||"")?"private":"net"};
+ const d=j.videoDetails;return{desc:d.shortDescription||"",title:d.title||"",tracks:(((j.captions||{}).playerCaptionsTracklistRenderer||{}).captionTracks)||[]}}
+async function ytComments(id){
+ const ctx={client:{clientName:"WEB",clientVersion:"2.20250101.00.00",hl:"fr"}};
+ try{const a=JSON.parse(await nativePost("https://www.youtube.com/youtubei/v1/next?prettyPrint=false",{context:ctx,videoId:id},WB_UA));
+  const pn=(a.engagementPanels||[]).find(p=>(p.engagementPanelSectionListRenderer||{}).targetId==="engagement-panel-comments-section");if(!pn)return[];
+  const find=o=>{if(!o||typeof o!=="object")return"";if(o.continuationCommand&&o.continuationCommand.token)return o.continuationCommand.token;for(const k in o){const r=find(o[k]);if(r)return r}return""};
+  const tok=find(pn);if(!tok)return[];
+  const rawb=await nativePost("https://www.youtube.com/youtubei/v1/next?prettyPrint=false",{context:ctx,continuation:tok},WB_UA),b=JSON.parse(rawb),pinned=/"pinnedText"/.test(rawb);
+  const ms=((b.frameworkUpdates||{}).entityBatchUpdate||{}).mutations||[],out=[];
+  ms.forEach(m=>{const p=(m.payload||{}).commentEntityPayload;if(p&&p.properties&&p.properties.content&&p.properties.content.content)out.push({text:String(p.properties.content.content),own:!!(p.author&&p.author.isCreator),lvl:+(p.properties.replyLevel||0)})});
+  out.forEach((c,i)=>c.pin=pinned&&i===0);
+  return out.sort((x,y)=>(y.pin-x.pin)||(y.own-x.own)).slice(0,14)}
+ catch(e){return[]}}
+function pickTrack(tr){const lang=L==="en"?"en":"fr",rank=t=>{const l=(t.languageCode||"").toLowerCase();return(l.startsWith(lang)?0:l.startsWith("fr")?1:l.startsWith("en")?2:3)*2+(t.kind==="asr"?1:0)};return tr.slice().sort((a,b)=>rank(a)-rank(b))[0]}
+function capsSegs(x){if(!x)return[];
+ if(/^\s*WEBVTT/.test(x))return x.split(/\n+/).filter(l=>l&&!/-->|^WEBVTT|^\d+$|^NOTE|^Kind:|^Language:/.test(l)).map(l=>PX_DEC(l.replace(/<[^>]+>/g,"")).replace(/\s+/g," ").trim()).filter(Boolean);
+ const out=[];x.replace(/<(?:p|text)\b[^>]*>([\s\S]*?)<\/(?:p|text)>/g,(m,s)=>{const v=PX_DEC(s.replace(/<[^>]+>/g,"")).replace(/\s+/g," ").trim();if(v)out.push(v);return m});return out}
+/* TikTok */
+async function ttInfo(url){const h=await nativeFetch(url);if(!h)return{error:"net"};
+ const m=h.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
+ if(m){try{const sc=JSON.parse(m[1]).__DEFAULT_SCOPE__||{},vd=sc["webapp.reflow.video.detail"]||sc["webapp.video-detail"]||{},it=(vd.itemInfo||{}).itemStruct;
+  if(it)return{desc:it.desc||"",title:"",subs:((it.video||{}).subtitleInfos)||[]};if(vd.statusCode&&vd.statusCode!==0)return{error:"private"}}catch(e){}}
+ let doc;try{doc=new DOMParser().parseFromString(h,"text/html")}catch(e){return{error:"net"}}const o=doc.querySelector('meta[property="og:description"]');return{desc:o?o.content:"",subs:[]}}
+/* recette reconstituée à partir d'un texte parlé (sous-titres) */
+const PX_UN="grammes?|gr|g|kilos?|kg|litres?|l|cl|ml|centilitres?|millilitres?|cuill?[èe]res?\\s+à\\s+(?:soupe|café|caf[ée])|cuill?[èe]res?|cac|cas|tasses?|verres?|pincées?|gousses?|tranches?|sachets?|pots?|boîtes?|briques?|morceaux?|poignées?|bouquets?|feuilles?|branches?|bols?|cups?|tablespoons?|teaspoons?|tbsp|tsp|ounces?|oz|pounds?|lbs?|cloves?|pinch(?:es)?|slices?";
+const PX_STOP=/^(minutes?|min|secondes?|heures?|degrés?|degré|fois|personnes?|jours?|cm|mm|centimètres?|étapes?|parts?|portions?|euros?|ans?|minutes|seconds?|hours?|degrees|times|people|days?|steps?|ingr[ée]dients?|trucs?|choses?|petit|petite|grand|grande|premier|première|deuxième|dernier)$/i;
+const PX_NUM={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,douze:12,demi:.5,one:1,two:2,three:3,four:4,five:5,six_:6,half:.5};
+const PX_W="(?!et\\b|puis\\b|dans\\b|avec\\b|que\\b|qui\\b|pour\\b|on\\b|je\\b|ça\\b|ensuite\\b|and\\b|then\\b|with\\b|once\\b|until\\b)[a-zà-ÿœ'’-]{3,}";
+const TR_ING=new RegExp("(\\d+(?:[.,]\\d+)?|une?|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|douze|demi|one|two|three|four|five|half)\\s+(?:(?:("+PX_UN+")\\b)\\s*(?:(?:de|d['’]|du|des|of)\\s*)?)?("+PX_W+"(?:\\s+(?:(?:de|du|d['’])\\s*)?"+PX_W+"){0,2})","gi");
+const PX_ONE=/^(œufs?|oeufs?|citrons?|oignons?|carottes?|tomates?|pommes?|bananes?|échalotes?|poivrons?|courgettes?|aubergines?|avocats?|yaourts?|eggs?|lemons?|onions?|bananas?|apples?)$/i;
+const PX_VERB=/\b(m[ée]lang\w*|ajout\w*|vers\w*|cuis\w*|cuir\w*|fai[st]\w*|mets|mettez|mettre|batt\w*|fouett\w*|incorpor\w*|enfourn\w*|pr[ée]chauff\w*|laiss\w*|coup\w*|[ée]minc\w*|[ée]pluch\w*|remu\w*|couvr\w*|chauff\w*|dor\w*|saisi\w*|poêl\w*|pétri\w*|étal\w*|retourn\w*|sal\w*|poivr\w*|assaison\w*|mixe\w*|hach\w*|cass\w*|sépar\w*|dépos\w*|bouill\w*|égoutt\w*|refroid\w*|servi\w*|dress\w*|mix\w*|add\w*|pour\w*|cook\w*|bak\w*|stir\w*|whisk\w*|heat\w*|chop\w*|slic\w*|season\w*|preheat\w*|boil\w*|simmer\w*|fry\w*|combin\w*|fold\w*|knead\w*)\b/i;
+const PX_OUT=/abonn|like|commentaire|merci|bienvenue|chaîne|partag|subscribe|channel|thanks|welcome|comment below/i;
+function recipeFromTranscript(segs,title){
+ const txt=segs.join(" ").replace(/\s+/g," ").trim();if(txt.length<80)return null;
+ const ings=[],seen=new Set();let m;TR_ING.lastIndex=0;
+ while((m=TR_ING.exec(txt))){let num=m[1].toLowerCase(),u=(m[2]||"").trim(),name=m[3].trim().replace(/\s+/g," ");
+  const nm=/^\d/.test(num)?+num.replace(",","."):PX_NUM[num];if(!nm)continue;
+  if(!u&&nm<2&&!PX_ONE.test(name.split(" ")[0]))continue;if(!u&&PX_STOP.test(name.split(" ")[0]))continue;if(PX_STOP.test(name.split(" ")[0]))continue;
+  const key=name.toLowerCase();if(seen.has(key))continue;seen.add(key);
+  ings.push({n:cap(name),q:(/^\d/.test(num)?num:String(nm))+(u?" "+u.replace(/^grammes?$|^gr$/i,"g").replace(/^kilos?$/i,"kg").replace(/^litres?$/i,"l"):"")})}
+ const sents=[];let cur="";segs.forEach(s=>{cur=(cur+" "+s).trim();if(/[.!?]$/.test(s)||cur.length>=110){sents.push(cur);cur=""}});if(cur)sents.push(cur);
+ const steps=sents.map(s=>s.replace(/^(alors|voilà|donc|bon|ensuite|et|puis|so|and|then|okay)\b[ ,]*/i,"").trim()).filter(s=>s.length>=25&&PX_VERB.test(s)&&!PX_OUT.test(s)).slice(0,15).map(s=>cap(s.replace(/\s*[,;]\s*$/,""))+(/[.!?]$/.test(s)?"":"."));
+ if(ings.length<3||steps.length<2)return null;
+ const ck=txt.match(/(\d+)\s*(?:à\s*\d+\s*)?(?:minutes?|min)\b[^.]{0,40}(?:four|cuis|cuit|bak|oven)|(?:four|cuis|cuit|bak|oven)[^.]{0,40}?(\d+)\s*(?:à\s*\d+\s*)?(?:minutes?|min)\b/i),sv=txt.match(/pour\s+(\d+)\s*(?:personnes|pers\b|portions)/i);
+ return Object.assign({title:String(title||"").replace(/#\S+/g,"").trim()||"Recette",prep:null,cook:ck?+(ck[1]||ck[2]):null,serv:sv?+sv[1]:null,ings:ings.slice(0,25),steps,note:"",demo:false},detectCook(txt))}
+/* la cascade */
+async function pxRun(l,pasted,up){
+ const native=hasNative(),vid=ytId(l.url),tt=/tiktok\.com/i.test(l.url),paste=(pasted||"").trim();
+ let info={desc:"",title:"",tracks:[],subs:[]},why="",links=[];
+ const done=(r,srcKey,u)=>{r.src=[t(srcKey)];r.demo=false;if(u)r.srcUrl=u;if(!r.title||r.title==="Recette")r.title=info.title||l.title;return{rec:r}};
+ up(0,"read",t("px_read"));
+ if(native){if(vid)info=Object.assign(info,await ytInfo(vid));else if(tt)info=Object.assign(info,await ttInfo(l.url));else info.desc=await videoText(l.url)||""}
+ else if(!paste)why="pc";
+ if(info.error)why=info.error;
+ if(paste)info.desc=paste+"\n"+(info.desc||"");
+ /* 1. légende */
+ let r=parseRec(pxClean(info.desc),info.title||l.title);
+ if(recipeOK(r,true)){up(0,"ok",t("px_ok"));[1,2,3,4].forEach(i=>up(i,"skip",t("px_skip")));return done(r,"px_src_desc")}
+ up(0,"none",why==="pc"?t("px_pc"):t("px_none"));links=urlsIn(info.desc);
+ /* 2. commentaires */
+ let com=[];
+ if(native&&vid&&!info.error){up(1,"read",t("px_read"));com=await ytComments(vid);
+  const tries=com.filter(c=>c.pin||c.own).map(c=>c.text);if(tries.length>1)tries.push(tries.join("\n"));com.forEach(c=>tries.push(c.text));
+  for(const x of tries){const rr=parseRec(pxClean(x),info.title||l.title);if(recipeOK(rr,true)){up(1,"ok",t("px_ok"));[2,3,4].forEach(i=>up(i,"skip",t("px_skip")));return done(rr,"px_src_com")}}
+  up(1,"none",com.length?t("px_none"):t("px_nocom"));com.forEach(c=>urlsIn(c.text).forEach(u=>links.includes(u)||links.push(u)))}
+ else up(1,"none",!native?t("px_pc"):why?t("px_none"):t("px_na"));
+ /* 3. liens externes */
+ if(native&&!info.error&&links.length){up(2,"read",t("px_read"));
+  for(const u of links.slice(0,5)){const rr=await pxLink(u,info.title||l.title,0);if(rr){up(2,"ok",t("px_ok"));[3,4].forEach(i=>up(i,"skip",t("px_skip")));return done(rr,"px_src_link",rr.srcUrl||u)}}
+  up(2,"none",t("px_none"))}
+ else up(2,"none",!native?t("px_pc"):t("px_nolink"));
+ /* 4. sous-titres */
+ let segs=[];
+ if(native&&!info.error){up(3,"read",t("px_read"));
+  try{if(vid&&info.tracks.length){const tr=pickTrack(info.tracks);if(tr)segs=capsSegs(await nativeFetch(tr.baseUrl))}
+   else if(tt&&info.subs&&info.subs.length){const s=info.subs.find(x=>/fr/i.test(x.LanguageCodeName||""))||info.subs.find(x=>/en/i.test(x.LanguageCodeName||""))||info.subs[0];if(s&&s.Url)segs=capsSegs(await nativeFetch(s.Url))}}catch(e){}
+  const rr=segs.length?recipeFromTranscript(segs,info.title||l.title):null;
+  if(rr){up(3,"ok",t("px_ok"));up(4,"skip",t("px_skip"));return done(rr,"px_src_sub")}
+  up(3,"none",segs.length?t("px_subnr"):t("px_nosub"))}
+ else up(3,"none",!native?t("px_pc"):t("px_na"));
+ up(4,"none",t("px_audio_na"));
+ return{rec:null,why:why||"none"}}
+const pxRows=list=>list.map((s,i)=>`<div class="row rxr" data-i="${i}"><span class="ib">${ic("ic-clock")}</span><span class="g"><b>${t(s)}</b><small>${t("px_wait")}</small></span></div>`).join("");
+async function rxPipeline(id,pasted){const l=S.links.find(x=>x.id===id);if(!l)return;S._rx=id;
+ sheet(`<div class="grab"></div><h2 id="sh-t">${ic("ic-wand")}${t("px_title")}</h2><div id="rxl">${pxRows(["px_s1","px_s2","px_s3","px_s4","px_s5"])}</div><div id="pxm"></div>`);
+ const up=(i,st,tx)=>{if(S._rx!==id)return;const e=document.querySelector(`.rxr[data-i="${i}"]`);if(!e)return;e.querySelector("small").textContent=tx;e.querySelector(".ib").innerHTML=ic(st==="ok"?"ic-check":st==="none"?"ic-x":"ic-clock")};
+ let res;try{res=await pxRun(l,pasted,up)}catch(e){res={rec:null,why:"net"}}
+ if(S._rx!==id)return;
+ if(res.rec){setTimeout(()=>rxFinish(id,res.rec),600);return}
+ const m=$("#pxm");if(m)m.innerHTML=`<p class="rban" role="alert">${ic("ic-wand")}<span><b>${t("px_fail_t")}.</b> ${t({pc:"px_why_pc",private:"px_why_private",net:"px_why_net"}[res.why]||"px_why_none")}</span></p><div class="trio" style="grid-template-columns:1fr;gap:.4rem"><button class="btn" data-a="pxpaste" data-id="${id}">${t("px_paste")}</button><button class="btn o" data-a="pxmanual" data-id="${id}">${t("px_manual")}</button><button class="btn o" data-a="pxex" data-id="${id}">${t("px_ex")}</button></div>`}
+const _a7=act2;
+act2=function(a,id,el){
+ switch(a){
+ case"rxgo":{const l=S.links.find(x=>x.id===id);if(l&&isVideoUrl(l.url)){S._ttl=(($("#rxtt")||{}).hidden===false?($("#rxtt").value||"").trim():"");rxPipeline(id,($("#rxt")||{}).value||"");return true}break}
+ case"pxpaste":closeSheet();setTimeout(()=>startExtract(id,false),50);return true;
+ case"pxmanual":{const l=S.links.find(x=>x.id===id);if(!l)return true;S._rx=id;rxFinish(id,{title:l.title,prep:null,cook:null,serv:null,ings:[],steps:[],note:"",demo:false,temp:"",pos:"",src:[]});setTimeout(()=>editSheet(id),200);return true}
+ case"pxex":{const l=S.links.find(x=>x.id===id);if(l){S._rx=id;rxFinish(id,demoRec(l.title))}return true}
+ }
+ return _a7(a,id,el)};
+
 /* --- connexion par compte (e-mail ou Google, via Supabase) --- */
 Object.assign(T,{lg_mail:["Se connecter / créer mon compte","Sign in / create my account"],lg_nosb:["Pour te connecter avec un compte, relie d’abord Supabase (Réglages → Synchronisation). En attendant, utilise le mode démo.","To sign in with an account, first connect Supabase (Settings → Sync). Meanwhile, use demo mode."],lg_need:["Entre ton e-mail et un mot de passe (6 caractères minimum).","Enter your email and a password (6 characters minimum)."],lg_google_err:["Connexion Google impossible : {e}","Google sign-in failed: {e}"],lg_ok:["Connecté","Signed in"]});
 const lgEnter=async(email,name)=>{S.auth=true;S.user={name:name||email.split("@")[0],email};const a=syA();a.email=email;a.h=null;a.at=null;save0();render();await syncNow(true);render()};
@@ -1374,7 +1513,7 @@ act2=function(a,id,el){
 vbPaint();
 if(!S.auth)S.step="main";render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
 
-window.__linko={vb:()=>VB,S:()=>S,syncNow,qrSvg,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
+window.__linko={px:pxRun,pxRows,vb:()=>VB,S:()=>S,syncNow,qrSvg,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
 })();
 </script>
 </body></html>

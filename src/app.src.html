@@ -265,7 +265,7 @@ html.lefty .fin{left:5rem;right:.9rem}
 .fim{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#2B5CE6,#14213f);display:grid;place-items:center;margin-bottom:.35rem}.fim .th{background:none;color:#fff;font-size:1.6rem}.sc{position:absolute;left:.4rem;top:.4rem;font-style:normal;font-size:.68rem;color:#fff;border:1px solid #ffffff88;border-radius:.6rem;padding:0 .4rem}.rbdg{position:absolute;right:.4rem;bottom:.4rem;width:1.7rem;height:1.7rem;border-radius:50%;background:#fff;color:#14213f;display:grid;place-items:center;font-style:normal}.rbdg svg{width:1rem;height:1rem}
 .mgr{display:flex;align-items:center;gap:.7rem;cursor:pointer}.mgr input{width:1.4rem;height:1.4rem;accent-color:var(--ac);flex:none}.mgr .g{min-width:0}.mgr b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mgbar{position:sticky;bottom:4.6rem;display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center;background:var(--sf);border:var(--bw) solid var(--ln);border-radius:1rem;padding:.55rem .7rem;margin-top:.6rem;box-shadow:var(--sh);z-index:50}.mgbar .btn{width:auto;padding:.6rem 1rem}.mgbar .btn:last-child{grid-column:1/-1;width:100%}.mgbar .btn[disabled]{opacity:.45}
-.selbtn{display:flex;align-items:center;gap:.35rem;margin:0 0 .4rem auto;color:var(--ac);font-weight:600;font-size:.9rem;min-height:2.4rem;padding:0 .4rem}.selbtn svg{width:1.1rem;height:1.1rem}
+.mgred{background:#C62828;color:#fff}.mgred[disabled]{opacity:.4}.selbtn{display:flex;align-items:center;gap:.35rem;margin:0 0 .4rem auto;color:var(--ac);font-weight:600;font-size:.9rem;min-height:2.4rem;padding:0 .4rem}.selbtn svg{width:1.1rem;height:1.1rem}
 
 .fim img.tim{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.fim .sc{z-index:1;background:rgba(10,18,40,.55)}.fim .rbdg{z-index:1}
 
@@ -447,7 +447,7 @@ function applyPrefs(){L=S.lang;const h=document.documentElement;h.classList.togg
 mq.addEventListener&&mq.addEventListener("change",()=>{applyPrefs()});
 const buzz=p=>{if(S.set.feedback&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
 function signal(msg){if(S.set.feedback){const f=$("#flash");f.classList.remove("on");void f.offsetWidth;f.classList.add("on");buzz([140,70,140])}toast(msg||t("new_signal"))}
-let tt;function toast(m,label,fn){const e=$("#toast");e.innerHTML=`<span>${esc(m)}</span>`+(label?`<button type="button" id="tact">${esc(label)}</button>`:"");e.classList.add("on");if(label)$("#tact").onclick=()=>{fn&&fn();e.classList.remove("on")};clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),label?5000:2600)}
+let tt;function toast(m,label,fn,ms){const e=$("#toast");e.innerHTML=`<span>${esc(m)}</span>`+(label?`<button type="button" id="tact">${esc(label)}</button>`:"");e.classList.add("on");if(label)$("#tact").onclick=()=>{fn&&fn();e.classList.remove("on")};clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),label?(ms||5000):2600)}
 /* ---------- feuilles ---------- */
 let opener=null,sheetOpen=false,onSheetClose=null;
 function sheet(html,cls=""){opener=document.activeElement;const s=$("#sheet");s.className="sheet "+cls;s.innerHTML=html;const o=$("#ov");o.classList.add("on");o.setAttribute("aria-hidden","false");sheetOpen=true;const f=s.querySelector("input:not([type=hidden]),button,a");f&&f.focus({preventScroll:true})}
@@ -458,7 +458,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($(".qfull")){$("
 /* ---------- historique (bouton retour du téléphone) ---------- */
 let H=0,uiBack=false;
 const pushH=()=>{try{history.pushState({l:1},"");H++}catch(e){}};
-function direct(){if(sheetOpen){closeSheet();return}if(S.sub==="mng"){const f=MG.from;S.sub=null;if(f==="set")S.tab="set";else if(f&&f.indexOf("cat:")===0){S.tab="links";S.cat=f.slice(4)}render();return}if(S.sub){S.sub=null;S.chatWith=null;recCancel();render();return}if(S.cat){S.cat=null;S.fl="all";render()}}
+function direct(){if(sheetOpen){closeSheet();return}if(S.sub==="trash"){const f=TRM.from;S.sub=f==="mng"?"mng":null;if(f==="set")S.tab="set";render();return}if(S.sub==="mng"){const f=MG.from;S.sub=null;if(f==="set")S.tab="set";else if(f&&f.indexOf("cat:")===0){S.tab="links";S.cat=f.slice(4)}render();return}if(S.sub){S.sub=null;S.chatWith=null;recCancel();render();return}if(S.cat){S.cat=null;S.fl="all";render()}}
 function back(){if(H>0){H--;uiBack=true;try{history.back()}catch(e){uiBack=false;direct()}}else direct()}
 addEventListener("popstate",()=>{if(!uiBack&&H>0)H--;uiBack=false;direct()});
 /* ---------- QR code (points ronds, logo au centre) ---------- */
@@ -502,6 +502,7 @@ function linkRow(l,showCat){
  return `<div class="row lk"><a class="in" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer"><span class="th" aria-hidden="true">${esc(brand(h)[0].toUpperCase())}</span><span class="tx"><b>${esc(l.title)}${l.fav?" ★":""}${l.rec?" · "+t("rc_badge"):""}</b><small>${esc(h)}</small>${showCat?`<span class="tg">${esc(catName(S.cats.find(c=>c.id===l.cat)))}</span>`:""}</span></a><button class="mb" data-a="lmenu" data-id="${l.id}" aria-label="${esc(t("actions_for",{t:l.title}))}">${ic("ic-more")}</button></div>`}
 T.show_again=["Afficher","Show"];
 Object.assign(T,{
+tr_title:["Corbeille","Trash"],tr_sub:["Les vidéos supprimées restent {d} jours ici, puis disparaissent.","Deleted videos stay here for {d} days, then disappear."],tr_moved:["{n} vidéo(s) déplacée(s) dans la corbeille","{n} video(s) moved to the trash"],tr_left:["{d} j restants","{d} d left"],tr_restore:["Restaurer","Restore"],tr_restore_all:["Tout restaurer","Restore all"],tr_restored:["{n} vidéo(s) restaurée(s)","{n} video(s) restored"],tr_empty:["Vider la corbeille","Empty the trash"],tr_empty_t:["Vider la corbeille ({n}) ?","Empty the trash ({n})?"],tr_empty_d:["Ces vidéos seront effacées définitivement. Impossible de les récupérer.","These videos will be erased for good. They cannot be recovered."],tr_confirm:["Je confirme : effacer définitivement {n} vidéos","I confirm: erase {n} videos for good"],tr_emptied:["Corbeille vidée","Trash emptied"],tr_none:["La corbeille est vide.","The trash is empty."],mg_ctitle_c:["Supprimer {n} vidéo(s) de la catégorie {c} ?","Delete {n} video(s) from the category {c}?"],mg_ctext2:["Elles iront dans la corbeille pendant {d} jours : vous pourrez les restaurer.","They will go to the trash for {d} days: you can restore them."],mg_confirm:["Je confirme vouloir supprimer ces {n} vidéos","I confirm I want to delete these {n} videos"],
 mg_title:["Gérer / nettoyer mes vidéos","Manage / clean up my videos"],mg_sub:["Cochez plusieurs vidéos et supprimez-les en une fois.","Tick several videos and delete them in one go."],mg_select:["Sélectionner","Select"],mg_all:["Tout sélectionner","Select all"],mg_none:["Tout désélectionner","Deselect all"],mg_del:["Supprimer ({n})","Delete ({n})"],mg_sel:["{n} sélectionnée(s)","{n} selected"],mg_search:["Chercher une vidéo","Search a video"],mg_nocat:["Sans catégorie","No category"],mg_empty:["Aucune vidéo ici.","No video here."],mg_ctitle:["Supprimer {n} vidéo(s) ?","Delete {n} video(s)?"],mg_ctext:["Ces vidéos seront retirées de Linko. Vous pourrez annuler juste après.","These videos will be removed from Linko. You can undo right after."],mg_cancel:["Annuler","Cancel"],mg_done:["{n} vidéo(s) supprimée(s)","{n} video(s) deleted"],mg_open:["Gérer / nettoyer mes vidéos","Manage / clean up my videos"],mg_hint:["Aucune vidéo cochée : cochez au moins une vidéo.","Nothing ticked: tick at least one video."],
 rc_favs:["Mes favoris","My favourites"],rc_fsub:["{n} favoris classés","{n} favourites sorted"],rc_search:["Chercher un favori","Search favourites"],rc_all:["Tous","All"],rc_allsrc:["Toutes sources","All sources"],
 rc_extract:["Extraire la recette","Extract the recipe"],rc_extract_sub:["Linko lit la description, le commentaire épinglé, les sous-titres, le texte à l’écran et le son.","Linko reads the description, pinned comment, subtitles, on-screen text and sound."],
@@ -564,6 +565,7 @@ function vSet(){
  <h3 class="lb">${t("s_account")}</h3><div class="row s-${S.status}">${avatar(myName(),S.status)}<div class="g"><b>${esc(myName())}</b><small>${S.user&&S.user.email?esc(S.user.email):S.user&&S.user.phone?esc(S.user.phone):t("demo_acc")}</small></div></div>
  <button class="setrow" data-a="status"><span class="g"><b>${t("s_status")}</b><small>${stLabel(S.status)}</small></span>${ic("ic-more")}</button>
  <button class="setrow" data-a="mgopen" data-id="all">${ic("ic-trash")}<span class="g"><b>${t("mg_open")}</b><small>${t("mg_sub")}</small></span></button>
+ <button class="setrow" data-a="tropen">${ic("ic-trash")}<span class="g"><b>${t("tr_title")} (${(S.trash||[]).length})</b><small>${t("tr_sub",{d:TRASH_DAYS})}</small></span></button>
  <button class="setrow" data-a="myqr">${ic("ic-qr")}<span class="g"><b>${t("my_qr")}</b></span></button>
  <h3 class="lb">${t("s_look")}</h3><div class="seg" role="group" aria-label="${t("s_look")}">${["auto","light","dark"].map(x=>`<button data-a="theme" data-id="${x}" aria-pressed="${S.set.theme===x}">${t("th_"+x)}</button>`).join("")}</div>
  <h3 class="lb">${t("s_access")}</h3>
@@ -631,7 +633,17 @@ function vMng(){const chips=[["all",t("all")],...S.cats.map(c=>[c.id,catName(c)]
  return `<div class="rhd"><button class="rb2" data-a="back" aria-label="${esc(t("back"))}">${ic("ic-back")}</button><h1>${t("mg_title")}</h1><span class="rb2" style="visibility:hidden"></span></div><p class="mut" style="margin:0 .2rem .5rem">${t("mg_sub")}</p>
  <div class="flip sbar"><label class="search">${ic("ic-search")}<span class="sr">${t("mg_search")}</span><input id="mq" type="search" placeholder="${esc(t("mg_search"))}" value="${esc(MG.q)}" autocomplete="off"></label></div>
  <div class="chs hs" role="group" aria-label="${t("category")}">${chips.map(x=>`<button aria-pressed="${MG.cat===x[0]}" class="${MG.cat===x[0]?"on":""}" data-a="mgcat" data-id="${x[0]}">${esc(x[1])}</button>`).join("")}</div>
- <div id="mgl">${mgRows()}</div><div class="mgbar" id="mgb">${mgBar()}</div>`}
+ <button class="selbtn" data-a="tropen" style="margin-left:0">${ic("ic-trash")}${t("tr_title")} (${(S.trash||[]).length})</button><div id="mgl">${mgRows()}</div><div class="mgbar" id="mgb">${mgBar()}</div>`}
+
+const MG_BIG=10,TRASH_DAYS=30;let TRM={};
+function toTrash(arr,msg){const ids=new Set(arr.map(l=>l.id)),idx=arr.map(l=>[S.links.indexOf(l),l]).sort((x,y)=>x[0]-y[0]);S.trash=S.trash||[];const now=Date.now();
+ arr.forEach(l=>S.trash.unshift(Object.assign({},l,{delAt:now})));S.links=S.links.filter(l=>!ids.has(l.id));S.del=[...new Set([...(S.del||[]),...ids])];save();render();
+ toast(msg,t("undo"),()=>{trRestore(arr,true)},6000)}
+function trRestore(arr,quiet){const ids=new Set(arr.map(x=>x.id));S.trash=(S.trash||[]).filter(x=>!ids.has(x.id));arr.forEach(x=>{const l=Object.assign({},x);delete l.delAt;if(!S.links.some(y=>y.id===l.id))S.links.push(l)});S.links.sort((a,b)=>(b.at||0)-(a.at||0));S.del=(S.del||[]).filter(x=>!ids.has(x));save();render();if(!quiet)toast(t("tr_restored",{n:arr.length}))}
+function trPurge(){const lim=Date.now()-TRASH_DAYS*864e5,n=(S.trash||[]).length;S.trash=(S.trash||[]).filter(x=>(x.delAt||0)>lim);if(S.trash.length!==n)save0()}
+function vTrash(){const tr=S.trash||[];return `<div class="rhd"><button class="rb2" data-a="back" aria-label="${esc(t("back"))}">${ic("ic-back")}</button><h1>${t("tr_title")}</h1><span class="rb2" style="visibility:hidden"></span></div><p class="mut" style="margin:0 .2rem .5rem">${t("tr_sub",{d:TRASH_DAYS})}</p>
+ ${tr.length?tr.map(x=>{const left=Math.max(0,Math.ceil(TRASH_DAYS-(Date.now()-(x.delAt||0))/864e5));return `<div class="row"><span class="g"><b>${esc(x.title)}</b><small>${esc(host(x.url))} · ${t("tr_left",{d:left})}</small></span><button class="btn s o" data-a="trres" data-id="${x.id}">${t("tr_restore")}</button></div>`}).join(""):`<p class="empty">${t("tr_none")}</p>`}
+ ${tr.length?`<div class="mgbar"><button class="btn s o" data-a="trresall">${t("tr_restore_all")}</button><button class="btn mgred" data-a="trask">${ic("ic-trash")} ${t("tr_empty")}</button></div>`:""}`}
 const mgRefresh=()=>{const l=$("#mgl"),b=$("#mgb");if(l)l.innerHTML=mgRows();if(b)b.innerHTML=mgBar()};
 function mgOpen(cat){closeSheet();const fr=S.tab=="set"?"set":(S.cat?"cat:"+S.cat:null);MG={cat:cat||"all",q:"",sel:new Set(),from:fr};S.tab="links";S.cat=null;S.sub="mng";pushH();render();window.scrollTo(0,0)}
 document.addEventListener("input",e=>{if(e.target.id==="mq"){MG.q=e.target.value;mgRefresh()}});
@@ -640,17 +652,24 @@ const _a8=act2;act2=function(a,id,el){switch(a){
  case"mgcat":MG.cat=id;render();return true;
  case"mgt":if(el.checked)MG.sel.add(id);else MG.sel.delete(id);const b=$("#mgb");if(b)b.innerHTML=mgBar();return true;
  case"mgall":{const all=mgList();if(all.every(l=>MG.sel.has(l.id)))all.forEach(l=>MG.sel.delete(l.id));else all.forEach(l=>MG.sel.add(l.id));mgRefresh();return true}
- case"mgask":{const n=MG.sel.size;if(!n){toast(t("mg_hint"));return true}sheet(`<div class="grab"></div><h2 id="sh-t">${ic("ic-trash")}${t("mg_ctitle",{n})}</h2><p class="mut" style="margin-bottom:.8rem">${t("mg_ctext")}</p><button class="btn" data-a="mgdo">${t("mg_del",{n})}</button><button class="lnk" data-a="mgno">${t("mg_cancel")}</button>`);return true}
+ case"mgask":{const n=MG.sel.size;if(!n){toast(t("mg_hint"));return true}const sl=S.links.filter(l=>MG.sel.has(l.id)),cs=[...new Set(sl.map(l=>l.cat||""))],cn=cs.length===1?(cs[0]?catName(S.cats.find(c=>c.id===cs[0])):t("mg_nocat")):"",big=n>MG_BIG;
+  sheet(`<div class="grab"></div><h2 id="sh-t">${ic("ic-trash")}${cn?t("mg_ctitle_c",{n,c:cn}):t("mg_ctitle",{n})}</h2><p class="mut" style="margin-bottom:.8rem">${t("mg_ctext2",{d:TRASH_DAYS})}</p>${big?`<label class="row mgr" style="margin-bottom:.6rem"><input type="checkbox" id="mgck" data-a="mgck"><span class="g"><b style="white-space:normal">${t("mg_confirm",{n})}</b></span></label>`:""}<button class="btn mgred" id="mgdo" data-a="mgdo" ${big?"disabled":""}>${t("mg_del",{n})}</button><button class="lnk" data-a="mgno">${t("mg_cancel")}</button>`);return true}
+ case"mgck":{const b=$("#mgdo");if(b)b.disabled=!el.checked;return true}
  case"mgno":closeSheet();return true;
- case"mgdo":{const ids=new Set(MG.sel),gone=[];S.links.forEach((l,i)=>{if(ids.has(l.id))gone.push([i,l])});S.links=S.links.filter(l=>!ids.has(l.id));S.del=[...new Set([...(S.del||[]),...ids])];MG.sel=new Set();save();closeSheet();render();
-  toast(t("mg_done",{n:gone.length}),t("undo"),()=>{gone.forEach(([i,l])=>S.links.splice(Math.min(i,S.links.length),0,l));S.del=(S.del||[]).filter(x=>!ids.has(x));save();render()});return true}
+ case"mgdo":{const ids=new Set(MG.sel);if(ids.size>MG_BIG&&!($("#mgck")||{}).checked)return true;const gone=S.links.filter(l=>ids.has(l.id));MG.sel=new Set();closeSheet();toTrash(gone,t("tr_moved",{n:gone.length}));return true}
+ case"tropen":closeSheet();TRM={from:S.tab==="set"?"set":S.sub==="mng"?"mng":null};S.tab="links";S.cat=null;S.sub="trash";pushH();render();window.scrollTo(0,0);return true;
+ case"trres":{const x=(S.trash||[]).find(y=>y.id===id);if(x)trRestore([x]);return true}
+ case"trresall":trRestore((S.trash||[]).slice());return true;
+ case"trask":{const n=(S.trash||[]).length;if(!n)return true;const big=n>MG_BIG;sheet(`<div class="grab"></div><h2 id="sh-t">${ic("ic-trash")}${t("tr_empty_t",{n})}</h2><p class="mut" style="margin-bottom:.8rem">${t("tr_empty_d")}</p>${big?`<label class="row mgr" style="margin-bottom:.6rem"><input type="checkbox" id="trck" data-a="trck"><span class="g"><b style="white-space:normal">${t("tr_confirm",{n})}</b></span></label>`:""}<button class="btn mgred" id="trdo" data-a="trdo" ${big?"disabled":""}>${t("tr_empty")}</button><button class="lnk" data-a="mgno">${t("mg_cancel")}</button>`);return true}
+ case"trck":{const b=$("#trdo");if(b)b.disabled=!el.checked;return true}
+ case"trdo":{const n=(S.trash||[]).length;if(n>MG_BIG&&!($("#trck")||{}).checked)return true;S.trash=[];save();closeSheet();render();toast(t("tr_emptied"));return true}
  }return _a8(a,id,el)};
 function render(){
  applyPrefs();
  if(!S.auth){$("#app").innerHTML=vLogin();return}
  if(S.tab==="links"&&S.sub==="feed"){$("#app").innerHTML=vFeed();bindFeed();return}
  const chat=S.tab==="friends"&&S.sub==="chat"&&S.chatWith;
- const pg=S.tab==="links"?(S.sub==="mng"?vMng():S.sub==="favs"?vFavs():S.sub==="rec"?vRec():S.sub==="memo"?vMemo():S.sub==="timer"?vTimer():S.cat?vCat():vHome()):S.tab==="friends"?(chat?`<div class="split"><div class="lst">${vFriends()}</div><div>${vChat()}</div></div>`:vFriends()):S.tab==="req"?vReq():S.tab==="act"?vAct():(S.sub==="cgu"?vCgu():vSet());
+ const pg=S.tab==="links"?(S.sub==="trash"?vTrash():S.sub==="mng"?vMng():S.sub==="favs"?vFavs():S.sub==="rec"?vRec():S.sub==="memo"?vMemo():S.sub==="timer"?vTimer():S.cat?vCat():vHome()):S.tab==="friends"?(chat?`<div class="split"><div class="lst">${vFriends()}</div><div>${vChat()}</div></div>`:vFriends()):S.tab==="req"?vReq():S.tab==="act"?vAct():(S.sub==="cgu"?vCgu():vSet());
  $("#app").innerHTML=`<a class="skip" href="#main">${t("skip")}</a><div class="shell ${chat?"nobar":""}">${rail()}<main id="main" class="page ${chat?"chatp":""}" tabindex="-1">${pg}</main>${bar()}</div>`;
  bindBar();if(chat){const m=$("#msgs");if(m)m.scrollTop=m.scrollHeight}
  if(PEND)setTimeout(runShare,350)
@@ -748,7 +767,7 @@ function act(a,id,el){
  case"rep":S._rep.r=id;$("#rl").innerHTML=repHTML();return;
  case"repsend":{if(!S._rep.r){$("#rerr").textContent=t("rep_pick");return}const l=S.links.find(x=>x.id===S._rep.id);l.reported=true;save();closeSheet();render();toast(t("rep_done"));return}
  case"unreport":lk().reported=false;break;
- case"ldel":{const l=lk(),i=S.links.indexOf(l);S.links.splice(i,1);(S.del=S.del||[]).push(l.id);save();closeSheet();render();toast(t("deleted"),t("undo"),()=>{S.links.splice(i,0,l);S.del=(S.del||[]).filter(x=>x!==l.id);save();render()});return}
+ case"ldel":{const l=lk();closeSheet();toTrash([l],t("tr_moved",{n:1}));return}
  case"invite":fr().s="out";toast(t("sent_to",{n:fr().n}));break;
  case"cancelreq":fr().s="none";break;
  case"accept":fr().s="ok";S.notifs.unshift({id:Date.now(),txt:t("now_friend",{n:fr().n}),nw:false});toast(t("now_friend",{n:fr().n}));break;
@@ -1191,7 +1210,7 @@ sy_login:["Se connecter / créer mon compte","Sign in / create my account"],sy_n
 sy_last:["Dernière synchro : {t}","Last sync: {t}"],sy_wrong:["E-mail ou mot de passe incorrect.","Wrong email or password."],sy_need:["Remplis l’adresse, la clé, l’e-mail et le mot de passe.","Fill in the URL, key, email and password."],
 sy_confirm:["Ton projet demande de confirmer l’e-mail : ouvre le message reçu, puis reviens et reconnecte-toi. (Ou désactive « Confirm email » dans Supabase.)","Your project asks to confirm the email: open the message, then come back and sign in. (Or turn off “Confirm email” in Supabase.)"],
 sy_done:["Synchronisé","Synced"],sy_pulled:["Données récupérées depuis ton compte","Data restored from your account"],sy_first:["Si ce compte contient déjà des données, elles remplacent celles de cet appareil.","If this account already has data, it replaces the data on this device."],sy_err:["Synchro impossible : {e}","Sync failed: {e}"],sy_out:["Synchro désactivée","Sync turned off"]});
-const SYK=["cats","links","cc","shop","memos","del"];
+const SYK=["cats","links","cc","shop","memos","del","trash"];
 const CFG=window.LINKO_CONFIG||{};
 const sbc=()=>({u:(S.set.sb||CFG.supabaseUrl||"").trim().replace(/\/$/,""),k:(S.set.sbk||CFG.supabaseKey||"").trim()});
 const syA=()=>S.sync||(S.sync={});
@@ -1203,7 +1222,7 @@ function syStore(j){const a=syA();a.tok=j.access_token;a.ref=j.refresh_token;a.e
 async function syToken(){const a=syA();if(!a.tok)throw new Error("login");if(a.exp&&Date.now()>a.exp-60000&&a.ref){const j=await sbFetch("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:a.ref})},false);syStore(j)}}
 function syApply(d){SYK.forEach(k=>{if(d[k]!==undefined)S[k]=d[k]});S.cc=S.cc||{m:[],f:[],s:[]};migrateCats();save0()}
 function syMerge(d){const have=(arr,id)=>arr.some(x=>x.id===id);
- (d.cats||[]).forEach(c=>{if(!have(S.cats,c.id))S.cats.push(c)});S.del=[...new Set([...(S.del||[]),...(d.del||[])])];(d.links||[]).forEach(l=>{if(!have(S.links,l.id)&&!S.del.includes(l.id))S.links.push(l)});S.links=S.links.filter(l=>!S.del.includes(l.id));(d.shop||[]).forEach(x=>{if(!have(S.shop,x.id))S.shop.push(x)});(d.memos||[]).forEach(x=>{if(!have(S.memos,x.id))S.memos.push(x)});
+ (d.cats||[]).forEach(c=>{if(!have(S.cats,c.id))S.cats.push(c)});S.del=[...new Set([...(S.del||[]),...(d.del||[])])];(d.links||[]).forEach(l=>{if(!have(S.links,l.id)&&!S.del.includes(l.id))S.links.push(l)});S.links=S.links.filter(l=>!S.del.includes(l.id));S.trash=S.trash||[];(d.trash||[]).forEach(x=>{if(!S.trash.some(y=>y.id===x.id)&&!S.links.some(y=>y.id===x.id))S.trash.push(x)});(d.shop||[]).forEach(x=>{if(!have(S.shop,x.id))S.shop.push(x)});(d.memos||[]).forEach(x=>{if(!have(S.memos,x.id))S.memos.push(x)});
  ["m","f","s"].forEach(g=>{S.cc=S.cc||{m:[],f:[],s:[]};((d.cc||{})[g]||[]).forEach(x=>{if(!(S.cc[g]||(S.cc[g]=[])).includes(x))S.cc[g].push(x)})});migrateCats();save0()}
 async function syPush(loc){const a=syA(),r=await sbFetch("/rest/v1/linko_state?on_conflict=user_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({user_id:a.uid,data:loc})});a.at=(r&&r[0]&&r[0].updated_at)||new Date().toISOString();a.h=JSON.stringify(loc);a.last=Date.now();save0()}
 let syBusy=false,syT=0;
@@ -1573,7 +1592,7 @@ async function thumbScan(){if(thumbBusy)return;thumbBusy=true;try{const now=Date
 document.addEventListener("error",e=>{const im=e.target;if(!im||!im.classList||!im.classList.contains("tim"))return;const f=im.closest(".fim"),l=f&&S.links.find(x=>x.id===f.dataset.id);if(!l)return;
  const was=l.img;l.img="";if(!l.imgRetry){l.imgRetry=1;if(was&&!/weserv/.test(was)){l.img=proxyImg(was);patchThumb(l);return}}
  l.imgNo=0;patchThumb(l);setTimeout(thumbScan,200)},true);
-setTimeout(thumbScan,1500);
+trPurge();setTimeout(thumbScan,1500);
 if(!S.auth)S.step="main";render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
 
 window.__linko={px:pxRun,pxRows,vb:()=>VB,S:()=>S,syncNow,qrSvg,thumbScan,fetchThumb,tmNew:(l,m)=>{tmNew(l,m);render()},tick};

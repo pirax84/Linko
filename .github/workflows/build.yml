@@ -51,6 +51,8 @@ jobs:
 
   pages:
     name: Mettre en ligne la version PC
+    needs: apk
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

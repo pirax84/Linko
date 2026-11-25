@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -84,9 +85,7 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
                 if (HOST.equals(u.getHost())) return false;
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, u));
-                } catch (Exception ignored) { }
+                openLink(u);
                 return true;
             }
         });
@@ -213,7 +212,7 @@ public class MainActivity extends Activity {
         public void openExternal(final String url) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) { }
+                    openLink(Uri.parse(url));
                 }
             });
         }
@@ -254,6 +253,47 @@ public class MainActivity extends Activity {
                 }
             }).start();
         }
+    }
+
+    /**
+     * Ouvre un lien externe sans empiler d'ecrans parasites : les liens courts (vm.tiktok.com...) sont d'abord
+     * resolus ici, puis ouverts directement ; une page de navigateur intermediaire ne reste pas dans l'historique.
+     * Resultat : un seul appui sur Retour ramene dans Linko.
+     */
+    private void openLink(final Uri u) {
+        String h = u.getHost() == null ? "" : u.getHost();
+        String path = u.getPath() == null ? "" : u.getPath();
+        boolean shortLink = h.equals("vm.tiktok.com") || h.equals("vt.tiktok.com") || h.equals("fb.watch") || h.equals("fb.me")
+                || (h.endsWith("tiktok.com") && path.startsWith("/t/"));
+        if (!shortLink) { launchLink(u); return; }
+        new Thread(new Runnable() {
+            public void run() {
+                Uri f = u;
+                try {
+                    HttpURLConnection c = (HttpURLConnection) new URL(u.toString()).openConnection();
+                    c.setInstanceFollowRedirects(true);
+                    c.setConnectTimeout(5000);
+                    c.setReadTimeout(5000);
+                    c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36");
+                    c.getResponseCode();
+                    String fu = c.getURL().toString();
+                    c.disconnect();
+                    if (fu.startsWith("https://")) f = Uri.parse(fu);
+                } catch (Exception ignored) { }
+                final Uri ff = f;
+                runOnUiThread(new Runnable() { public void run() { launchLink(ff); } });
+            }
+        }).start();
+    }
+
+    private void launchLink(Uri u) {
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW, u);
+            ResolveInfo ri = getPackageManager().resolveActivity(i, PackageManager.MATCH_DEFAULT_ONLY);
+            String pk = (ri != null && ri.activityInfo != null) ? ri.activityInfo.packageName : "";
+            if (pk.matches(".*(chrome|browser|firefox|opera|edge|brave|sbrowser|duckduckgo).*")) i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            startActivity(i);
+        } catch (Exception ignored) { }
     }
 
     /** Raccourci de partage direct : "Linko > Recettes" dans le menu Partager (Android 10+ le met en tete). */

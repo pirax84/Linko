@@ -7,7 +7,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.content.ContentValues;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.webkit.ValueCallback;
+import java.io.OutputStream;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
@@ -37,6 +42,7 @@ public class MainActivity extends Activity {
     private View customView;
     private WebChromeClient.CustomViewCallback customCb;
     private PermissionRequest pending;
+    private ValueCallback<Uri[]> fileCb;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -79,6 +85,19 @@ public class MainActivity extends Activity {
         });
 
         wv.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (fileCb != null) fileCb.onReceiveValue(null);
+                fileCb = cb;
+                try {
+                    Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                    startActivityForResult(Intent.createChooser(i, "Linko"), 41);
+                } catch (Exception e) { fileCb = null; cb.onReceiveValue(null); return false; }
+                return true;
+            }
+
             @Override
             public void onPermissionRequest(final PermissionRequest req) {
                 runOnUiThread(new Runnable() {
@@ -153,6 +172,24 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() { public void run() { wv.evaluateJavascript(js, null); } });
                 }
             }).start();
+        }
+
+        /** Enregistre un fichier texte dans Telechargements. Renvoie le nom si c'est bon, sinon "". */
+        @JavascriptInterface
+        public String saveFile(String name, String mime, String text) {
+            try {
+                if (Build.VERSION.SDK_INT < 29) return "";
+                ContentValues v = new ContentValues();
+                v.put(MediaStore.Downloads.DISPLAY_NAME, name);
+                v.put(MediaStore.Downloads.MIME_TYPE, mime);
+                v.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                if (u == null) return "";
+                OutputStream o = getContentResolver().openOutputStream(u);
+                o.write(text.getBytes("UTF-8"));
+                o.close();
+                return name;
+            } catch (Exception e) { return ""; }
         }
 
         @JavascriptInterface
@@ -232,6 +269,20 @@ public class MainActivity extends Activity {
             else pending.deny();
             pending = null;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        if (req == 41) {
+            if (fileCb != null) {
+                Uri[] r = null;
+                if (res == RESULT_OK && data != null && data.getData() != null) r = new Uri[]{data.getData()};
+                fileCb.onReceiveValue(r);
+                fileCb = null;
+            }
+            return;
+        }
+        super.onActivityResult(req, res, data);
     }
 
     @Override

@@ -33,6 +33,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="app.linko" android:host="login-callback"/>
             </intent-filter>
+        <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
     </application>
 </manifest>

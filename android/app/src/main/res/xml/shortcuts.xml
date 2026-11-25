@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <share-target android:targetClass="app.linko.MainActivity">
+        <data android:mimeType="text/plain"/>
+        <category android:name="app.linko.category.RECIPES"/>
+    </share-target>
+</shortcuts>

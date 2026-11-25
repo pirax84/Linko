@@ -8,6 +8,12 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.content.ContentValues;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
+import android.graphics.drawable.Icon;
+import android.view.WindowManager;
+import java.util.Collections;
+import java.util.Locale;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -67,6 +73,7 @@ public class MainActivity extends Activity {
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
         wv.addJavascriptInterface(new Bridge(), "LinkoNative");
+        publishShortcut();
         wv.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
@@ -193,6 +200,16 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void keepOn(final boolean on) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void openExternal(final String url) {
             runOnUiThread(new Runnable() {
                 public void run() {
@@ -239,6 +256,26 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Raccourci de partage direct : "Linko > Recettes" dans le menu Partager (Android 10+ le met en tete). */
+    private void publishShortcut() {
+        try {
+            if (Build.VERSION.SDK_INT < 25) return;
+            ShortcutManager sm = getSystemService(ShortcutManager.class);
+            if (sm == null) return;
+            Intent in = new Intent(this, MainActivity.class);
+            in.setAction(Intent.ACTION_VIEW);
+            String label = "fr".equals(Locale.getDefault().getLanguage()) ? "Recettes" : "Recipes";
+            ShortcutInfo si = new ShortcutInfo.Builder(this, "recipes")
+                    .setShortLabel(label)
+                    .setLongLabel("Linko : " + label)
+                    .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher))
+                    .setCategories(Collections.singleton("app.linko.category.RECIPES"))
+                    .setIntent(in)
+                    .build();
+            sm.setDynamicShortcuts(Collections.singletonList(si));
+        } catch (Exception ignored) { }
+    }
+
     private String urlFor(Intent i) {
         if (i != null && Intent.ACTION_VIEW.equals(i.getAction()) && i.getData() != null && "app.linko".equals(i.getData().getScheme())) {
             String frag = i.getData().getEncodedFragment();
@@ -250,6 +287,7 @@ public class MainActivity extends Activity {
             Uri.Builder u = Uri.parse(HOME).buildUpon();
             if (text != null) u.appendQueryParameter("text", text);
             if (title != null) u.appendQueryParameter("title", title);
+            if ("recipes".equals(i.getStringExtra(Intent.EXTRA_SHORTCUT_ID))) u.appendQueryParameter("rec", "1");
             return u.build().toString();
         }
         return HOME;

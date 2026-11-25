@@ -3729,7 +3729,7 @@ act2=function(a,id,el){
  }
  return _a5(a,id,el)};
 vbPaint();
-render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
+if(!S.auth)S.step="main";render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
 
 window.__linko={vb:()=>VB,S:()=>S,syncNow,qrSvg,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
 })();

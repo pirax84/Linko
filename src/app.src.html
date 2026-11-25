@@ -263,6 +263,8 @@ html.lefty .fin{left:5rem;right:.9rem}
 .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-top:.4rem}.fcard{text-align:left;background:var(--sf);border:var(--bw) solid var(--ln);border-radius:1rem;overflow:hidden;display:flex;flex-direction:column;gap:.15rem;padding:0 0 .55rem}
 .fcard b{padding:0 .6rem;font-size:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.fcard small{padding:0 .6rem;color:var(--mut);font-size:.72rem}
 .fim{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#2B5CE6,#14213f);display:grid;place-items:center;margin-bottom:.35rem}.fim .th{background:none;color:#fff;font-size:1.6rem}.sc{position:absolute;left:.4rem;top:.4rem;font-style:normal;font-size:.68rem;color:#fff;border:1px solid #ffffff88;border-radius:.6rem;padding:0 .4rem}.rbdg{position:absolute;right:.4rem;bottom:.4rem;width:1.7rem;height:1.7rem;border-radius:50%;background:#fff;color:#14213f;display:grid;place-items:center;font-style:normal}.rbdg svg{width:1rem;height:1rem}
+.fim img.tim{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.fim .sc{z-index:1;background:rgba(10,18,40,.55)}.fim .rbdg{z-index:1}
+
 .rcsw{margin-bottom:.6rem}.swk{width:2.4rem;height:1.4rem;border-radius:1rem;background:var(--ln);position:relative;flex:none;margin-left:auto}.swk:after{content:"";position:absolute;left:.15rem;top:.15rem;width:1.1rem;height:1.1rem;border-radius:50%;background:#fff;transition:.15s}.rcsw[aria-checked=true] .swk{background:var(--ac)}.rcsw[aria-checked=true] .swk:after{left:1.15rem}
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.4rem}.trio label{font-size:.72rem;color:var(--mut)}
 @media(min-width:900px){.recw{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1.4rem;align-items:start}.rseg{display:none}.rp{display:block}.rp h3{display:block}.fgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -633,7 +635,7 @@ function openSave(url,title){
  setTimeout(()=>{if(!Q||Q.url!==url)return;Q.meta=fakeMeta(url,title);Q.pending=false;const p=$("#pv");if(p)p.innerHTML=pvHTML()},900)}
 function finishSave(catId){
  let meta=Q.meta||fakeMeta(Q.url,Q.title);const l={id:"l"+Date.now(),cat:catId||null,url:Q.url,title:meta.title,fav:false,at:Date.now(),note:Q.note||""};
- S.links.unshift(l);save();closeSheet();S.q="";render();if(isVR(l.cat))autoRec(l);else if(S.set.recAuto!==false)setTimeout(()=>startExtract(l.id),200);
+ S.links.unshift(l);save();closeSheet();S.q="";render();setTimeout(thumbScan,300);if(isVR(l.cat))autoRec(l);else if(S.set.recAuto!==false)setTimeout(()=>startExtract(l.id),200);
  const c=S.cats.find(c=>c.id===catId);
  toast(c?t("saved_in",{c:catName(c)}):t("saved_sort"),t("undo"),()=>{S.links=S.links.filter(x=>x.id!==l.id);save();render()})}
 function sortNext(){
@@ -1050,7 +1052,7 @@ function vRec(){const l=recOf();if(!l){S.sub=null;return vHome()}const r=l.rec,e
  <section class="rp ${tab==="ing"?"on":""}"><h3>${t("rc_ing")}</h3>${ing}</section><section class="rp ${tab==="stp"?"on":""}"><h3>${t("rc_stp")}</h3>${stp}</section><section class="rp ${tab==="note"?"on":""}"><h3>${t("rc_notes")}</h3><textarea id="rnote" rows="4" placeholder="${esc(t("rc_notes_ph"))}" aria-label="${esc(t("rc_notes_ph"))}">${esc(r.note||"")}</textarea></section></div></div>`}
 function favList(){const q=(S.fq||"").trim().toLowerCase(),th=S.fth||"all",sr=S.fsrc||"all";
  return S.links.filter(l=>!l.reported&&(th==="all"||(th==="none"?!l.cat:l.cat===th))&&(sr==="all"||brand(host(l.url))===sr)&&(!q||(l.title+" "+l.url+" "+((l.rec&&l.rec.ings.map(i=>i.n).join(" "))||"")).toLowerCase().includes(q)))}
-function favGrid(){const ls=favList();return ls.length?`<div class="fgrid">${ls.map(l=>{const b=brand(host(l.url)),c=S.cats.find(c=>c.id===l.cat);return `<button class="fcard" data-a="fopen" data-id="${l.id}"><span class="fim"><i class="sc">${esc(b)}</i><span class="th" aria-hidden="true">${esc(b[0].toUpperCase())}</span>${l.rec?`<i class="rbdg" aria-label="${esc(t("rc_badge"))}">${ic("ic-doc")}</i>`:""}</span><b>${esc(l.title)}</b><small>${esc(c?catName(c):"")}${l.rec?" · "+t("rc_badge"):""}</small></button>`}).join("")}</div>`:`<p class="empty">${t("rc_none")}</p>`}
+function favGrid(){const ls=favList();setTimeout(thumbScan,60);return ls.length?`<div class="fgrid">${ls.map(l=>{const b=brand(host(l.url)),c=S.cats.find(c=>c.id===l.cat);return `<button class="fcard" data-a="fopen" data-id="${l.id}"><span class="fim" data-id="${l.id}">${thumbImg(l)}<i class="sc">${esc(b)}</i>${thumbOf(l)?"":`<span class="th" aria-hidden="true">${esc(b[0].toUpperCase())}</span>`}${l.rec?`<i class="rbdg" aria-label="${esc(t("rc_badge"))}">${ic("ic-doc")}</i>`:""}</span><b>${esc(l.title)}</b><small>${esc(c?catName(c):"")}${l.rec?" · "+t("rc_badge"):""}</small></button>`}).join("")}</div>`:`<p class="empty">${t("rc_none")}</p>`}
 function vFavs(){const srcs=[...new Set(S.links.map(l=>brand(host(l.url))))];
  return `<div class="rhd"><button class="rb2" data-a="back" aria-label="${esc(t("rc_back"))}">${ic("ic-back")}</button><h1>${t("rc_favs")}</h1><span class="rb2" style="visibility:hidden"></span></div><div class="flip sbar"><label class="search">${ic("ic-search")}<span class="sr">${t("rc_search")}</span><input id="fq" type="search" placeholder="${esc(t("rc_search"))}" value="${esc(S.fq||"")}" autocomplete="off"></label></div>
  <div class="chs hs" role="group" aria-label="${t("category")}">${[["all",t("rc_all")],...S.cats.map(c=>[c.id,catName(c)])].map(x=>`<button aria-pressed="${(S.fth||"all")===x[0]}" class="${(S.fth||"all")===x[0]?"on":""}" data-a="fth" data-id="${x[0]}">${esc(x[1])}</button>`).join("")}</div>
@@ -1511,9 +1513,39 @@ act2=function(a,id,el){
  }
  return _a5(a,id,el)};
 vbPaint();
+
+/* ===== Vignettes des favoris : vraie image d'abord, fond bleu en dernier recours ===== */
+const thumbOf=l=>(l&&(l.img||""))||"";
+const thumbImg=l=>thumbOf(l)?`<img class="tim" src="${esc(thumbOf(l))}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`:"";
+const proxyImg=u=>"https://images.weserv.nl/?w=640&output=jpg&url="+encodeURIComponent(u.replace(/^https?:\/\//,""));
+function imgFromHtml(h,base){if(!h)return"";let doc;try{doc=new DOMParser().parseFromString(h,"text/html")}catch(e){return""}
+ const g=q=>{const e=doc.querySelector(q);return e?(e.getAttribute("content")||e.getAttribute("href")||"").trim():""};
+ let c=[g('meta[property="og:image:secure_url"]'),g('meta[property="og:image"]'),g('meta[name="twitter:image"]'),g('meta[name="twitter:image:src"]'),g('link[rel="image_src"]')];
+ doc.querySelectorAll('script[type="application/ld+json"]').forEach(x=>{try{const o=JSON.parse(x.textContent);[].concat(o,o["@graph"]||[]).forEach(z=>{if(!z)return;let i=z.thumbnailUrl||z.image;i=Array.isArray(i)?i[0]:i;if(i&&typeof i==="object")i=i.url;if(i)c.push(String(i))})}catch(e){}});
+ const m=h.match(/"(?:thumbnailUrl|cover|originCover)":"(https?:[^"]+)"/);if(m)try{c.push(JSON.parse('"'+m[1]+'"'))}catch(e){}
+ for(const i of c){if(!i)continue;try{return new URL(i.replace(/&amp;/g,"&"),base).href}catch(e){}}return""}
+async function getText(u){if(hasNative())return nativeFetch(u);try{const c=new AbortController();setTimeout(()=>c.abort(),8000);const r=await fetch(u,{signal:c.signal});return await r.text()}catch(e){return""}}
+async function oembedImg(u){const eps=[];if(/tiktok\.com/i.test(u))eps.push("https://www.tiktok.com/oembed?url="+encodeURIComponent(u));eps.push("https://noembed.com/embed?url="+encodeURIComponent(u));
+ for(const e of eps){try{const j=JSON.parse(await getText(e));if(j&&j.thumbnail_url)return j.thumbnail_url}catch(x){}}return""}
+async function microImg(u){try{const j=JSON.parse(await getText("https://api.microlink.io/?url="+encodeURIComponent(u)));const d=j&&j.data;return(d&&((d.image&&d.image.url)||(d.logo&&0)))||""}catch(e){return""}}
+function imgLoads(u){return new Promise(res=>{if(!u)return res(false);const i=new Image();i.referrerPolicy="no-referrer";const to=setTimeout(()=>res(false),9000);i.onload=()=>{clearTimeout(to);res(i.naturalWidth>40)};i.onerror=()=>{clearTimeout(to);res(false)};i.src=u})}
+/* Ordre : YouTube (direct) -> meta de la page -> oEmbed -> service de secours ; chaque image est testee, puis via un proxy si elle est bloquee */
+async function fetchThumb(l){const u=l.url,cands=[];const y=ytId(u);if(y)cands.push(()=>"https://i.ytimg.com/vi/"+y+"/hqdefault.jpg");
+ if(l.rec&&l.rec.img)cands.push(()=>l.rec.img);
+ cands.push(async()=>imgFromHtml(await getText(u),u),()=>oembedImg(u),()=>microImg(u));
+ for(const f of cands){let i="";try{i=await f()}catch(e){}if(!i)continue;if(await imgLoads(i))return i;const p=proxyImg(i);if(await imgLoads(p))return p}return""}
+function patchThumb(l){document.querySelectorAll('.fim[data-id="'+l.id+'"]').forEach(f=>{f.querySelectorAll("img.tim").forEach(x=>x.remove());const th=f.querySelector(".th");if(thumbOf(l)){f.insertAdjacentHTML("afterbegin",thumbImg(l));if(th)th.remove()}})}
+let thumbBusy=false;
+async function thumbScan(){if(thumbBusy)return;thumbBusy=true;try{const now=Date.now();
+ for(const l of S.links.slice()){if(l.reported||thumbOf(l))continue;if(l.imgNo&&now-l.imgNo<864e5)continue;
+  const i=await fetchThumb(l);if(i){l.img=i;delete l.imgNo;delete l.imgRetry}else l.imgNo=Date.now();save0&&save0();patchThumb(l);await new Promise(r=>setTimeout(r,250))}}finally{thumbBusy=false}}
+document.addEventListener("error",e=>{const im=e.target;if(!im||!im.classList||!im.classList.contains("tim"))return;const f=im.closest(".fim"),l=f&&S.links.find(x=>x.id===f.dataset.id);if(!l)return;
+ const was=l.img;l.img="";if(!l.imgRetry){l.imgRetry=1;if(was&&!/weserv/.test(was)){l.img=proxyImg(was);patchThumb(l);return}}
+ l.imgNo=0;patchThumb(l);setTimeout(thumbScan,200)},true);
+setTimeout(thumbScan,1500);
 if(!S.auth)S.step="main";render();incoming();if(S.auth&&S.sync&&S.sync.tok)setTimeout(()=>syncNow(false),1500);
 
-window.__linko={px:pxRun,pxRows,vb:()=>VB,S:()=>S,syncNow,qrSvg,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
+window.__linko={px:pxRun,pxRows,vb:()=>VB,S:()=>S,syncNow,qrSvg,thumbScan,fetchThumb,tmNew:(l,m)=>{tmNew(l,m);render()},tick};
 })();
 </script>
 </body></html>

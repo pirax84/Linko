@@ -3881,7 +3881,7 @@ function imgFromHtml(h,base){if(!h)return"";let doc;try{doc=new DOMParser().pars
  doc.querySelectorAll('script[type="application/ld+json"]').forEach(x=>{try{const o=JSON.parse(x.textContent);[].concat(o,o["@graph"]||[]).forEach(z=>{if(!z)return;let i=z.thumbnailUrl||z.image;i=Array.isArray(i)?i[0]:i;if(i&&typeof i==="object")i=i.url;if(i)c.push(String(i))})}catch(e){}});
  const m=h.match(/"(?:thumbnailUrl|cover|originCover)":"(https?:[^"]+)"/);if(m)try{c.push(JSON.parse('"'+m[1]+'"'))}catch(e){}
  for(const i of c){if(!i)continue;try{return new URL(i.replace(/&amp;/g,"&"),base).href}catch(e){}}return""}
-async function getText(u){if(hasNative())return nativeFetch(u);try{const c=new AbortController();setTimeout(()=>c.abort(),8000);const r=await fetch(u,{signal:c.signal});return await r.text()}catch(e){return""}}
+async function getText(u){if(hasNative())return nativeFetch(u);if(!/^https:\/\/(noembed\.com|api\.microlink\.io|www\.tiktok\.com\/oembed)/.test(u))return"";try{const c=new AbortController();setTimeout(()=>c.abort(),8000);const r=await fetch(u,{signal:c.signal});return await r.text()}catch(e){return""}}
 async function oembedImg(u){const eps=[];if(/tiktok\.com/i.test(u))eps.push("https://www.tiktok.com/oembed?url="+encodeURIComponent(u));eps.push("https://noembed.com/embed?url="+encodeURIComponent(u));
  for(const e of eps){try{const j=JSON.parse(await getText(e));if(j&&j.thumbnail_url)return j.thumbnail_url}catch(x){}}return""}
 async function microImg(u){try{const j=JSON.parse(await getText("https://api.microlink.io/?url="+encodeURIComponent(u)));const d=j&&j.data;return(d&&((d.image&&d.image.url)||(d.logo&&0)))||""}catch(e){return""}}
